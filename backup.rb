@@ -9,8 +9,9 @@ class Backup
   def self.hash_has_key?(backup, key)
     return false if backup.key? key
 
-    MyLogger.fatal("backup has no #{key} slot.\nbackup = #{backup}")
-    raise StandardError
+    msg = "backup has no #{key} slot.\nbackup = #{backup}"
+    MyLogger.fatal msg
+    raise StandardError, msg
   end
 
   def self.from_h(backup)
