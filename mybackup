@@ -1,0 +1,5 @@
+#!/bin/sh
+here=$(dirname "$(realpath ""${0:-}"")")
+/usr/bin/env bundle exec \
+  --gemfile "${here}/Gemfile" \
+  ruby "${here}/mybackup.rb" "$@"

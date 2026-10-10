@@ -1,0 +1,20 @@
+log:
+  # log level defined in Logger::Severity
+  level: info
+  # directory to be placed logs like YYYY-MM-DD_mybakcup.log
+  directory: ~/tmp/mybackup_logs
+# patterns for paths to be excluded
+exclude_patterns:
+  - Application Data/Hoge
+backups:
+  # backup between two local directories
+  - name: my home directory
+    type: local
+    from: /home/username/*
+    to: /path/to/backup_data/username_home/
+  # backup between remote and local directories via ssh
+  - name: minecraft data on my server
+    type: remote
+    identity_file: ~/.ssh/my-server.id
+    from: "my-mc-server:~/mincraft_data/*"
+    to: /path/to/backup_data/minecraft_server_data/
