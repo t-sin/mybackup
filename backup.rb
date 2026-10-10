@@ -1,21 +1,5 @@
 # frozen_string_literal: true
 
-class Backup
-  attr_reader :name, :from, :to
-
-  def self.from_h(hash); end
-  def backup(config); end
-  def show; end
-end
-
-class LocalBackup < Backup
-  def self.from_h(hash); end
-end
-
-class RemoteBackup < Backup
-  def self.from_h(hash); end
-end
-
 def remove_last_slash(s)
   s.chop! if s.end_with? '/'
   s
@@ -45,6 +29,19 @@ class Backup
     end
   end
 
+  def show
+    msg = 'there is no info to show'
+    MyLogger.fatal msg
+    raise NotImplementedError, msg
+  end
+
+  def backup(_config)
+    msg = 'there is no info to run backup'
+    MyLogger.fatal msg
+
+    raise NotImplementedError, msg
+  end
+
   def rsync_options(log_file, options = [])
     base_options = [
       #  '--exclude=\'Application Data\''         #  対象外パス
@@ -63,16 +60,6 @@ class Backup
       "--log-file=#{log_file}" # ログファイル名
     ]
     base_options + options
-  end
-
-  def show
-    MyLogger.fatal('there is no info to show')
-    raise StandardError
-  end
-
-  def backup(_config)
-    MyLogger.fatal('there is no info to run backup')
-    raise StandardError
   end
 end
 
