@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'optparse'
+require 'pp'
+
 class MyBackup
   PROG_NAME = 'mybackup'
   PORG_VERSION = '0.1.0'
@@ -9,7 +12,6 @@ class MyBackup
   OP_BACKUP = :'op::backup'
 end
 
-require 'optparse'
 def parse_opt(argv)
   opt = OptionParser.new
   opt.banner = "Usage: #{MyBackup::PROG_NAME} [CONFIG_PATH]"
@@ -33,7 +35,7 @@ config = MybackupConfig.new argv, params, opt
 
 require_relative 'logger'
 MyLogger.setup(config.log_level, config.log_file)
-MyLogger.info config.to_h
+# MyLogger.debug PP.pp config.to_h
 
 require_relative 'backup'
 require_relative 'command'
@@ -44,31 +46,24 @@ def main(config)
 
   case config.operation
   when MyBackup::OP_SHOW_CONFIG
-    s = config
-    MyLogger.info s, only_file: true
-    puts s
-    puts
+    MyLogger.info config
   when MyBackup::OP_LIST_TARGETS
     backups.each do |b|
-      s = b.show
-      MyLogger.info s, only_file: true
-      puts s
-      puts
+      b.to_ss.each { |s| MyLogger.info s }
     end
   when MyBackup::OP_BACKUP
+    MyLogger.info "=== start backup operation at #{Time.now.iso8601}\n"
     backups.each do |b|
-      MyLogger.info ''
+      MyLogger.info "-- start backup #{b.name} at #{Time.now.iso8601}"
       b.backup config
-      puts
+      MyLogger.info "-- finished backup #{b.name} at #{Time.now.iso8601}\n"
     end
+    MyLogger.info "finished backup operation at #{Time.now.iso8601}"
   else
     msg = "unknown operation: #{op}"
     MyLogger.fatal msg
     exit 1
   end
-
-  MyLogger.info ''
-  puts
 end
 
 main config

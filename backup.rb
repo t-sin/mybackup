@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
+require 'pp'
+
 def remove_last_slash(s)
   s.chop! if s.end_with? '/'
   s
 end
 
 class Backup
+  attr_reader :name, :from, :to
+
   def self.hash_has_key?(backup, key)
     return false if backup.key? key
 
@@ -30,7 +34,7 @@ class Backup
     end
   end
 
-  def show
+  def to_ss
     msg = 'there is no info to show'
     MyLogger.fatal msg
     raise NotImplementedError, msg
@@ -41,6 +45,12 @@ class Backup
     MyLogger.fatal msg
 
     raise NotImplementedError, msg
+  end
+
+  def initialize(name, from, to)
+    @name = name
+    @from = from
+    @to = to
   end
 
   def rsync_options(log_file, options = [])
@@ -70,19 +80,17 @@ class LocalBackup < Backup
   end
 
   def initialize(name, from, to)
-    @name = name
-    @from = from
-    @to = to
+    super
     MyLogger.debug("local backup: #{name}, from = #{from}, to = #{to}")
   end
 
-  def show
+  def to_ss
     [
-      'LocalBackup',
+      "LocalBackup: #{@name}",
       "  name = #{@name}",
       "  from = #{@from}",
-      "  to   = #{@to}"
-    ].join("\n")
+      "    to = #{@to}"
+    ]
   end
 
   def backup(config)
@@ -95,47 +103,38 @@ class LocalBackup < Backup
       options: rsync_options(config.log_file, options),
       exclude_patterns: config.exclude_patterns
     )
-
-    MyLogger.info('********** dry run!!!!! **********') if config.dry_run
-    MyLogger.info("local backap '#{@name}'")
-    MyLogger.info("  from = #{@from}, to = #{@to}")
-    MyLogger.info("  command = #{cmd}")
+    to_ss.each { |s| MyLogger.info s }
 
     ret = cmd.run
-    unless ret
-      MyLogger.info("backup failed; return code = #{ret}")
-      raise StandardError
-    end
-    MyLogger.info('backup finished')
+    return if ret
+
+    MyLogger.info("backup failed; return code = #{ret}")
+    raise StandardError
   end
 end
 
 class RemoteBackup < Backup
-  attr_reader :host, :identity_file
+  attr_reader :identity_file
 
   def self.from_h(backup)
-    self.hash_has_key? backup, 'identity_file'
+    hash_has_key? backup, 'identity_file'
 
-    new backup['name'], backup['from'], backup['to'], backup['host'], backup['identity_file']
+    new backup['name'], backup['from'], backup['to'], backup['identity_file']
   end
 
-  def initialize(name, from, to, host, identity_file)
-    @name = name
-    @from = from
-    @to = to
-    @host = host
+  def initialize(name, from, to, identity_file)
+    super(name, from, to)
     @identity_file = identity_file
-    MyLogger.debug("remote backup: #{name}, from = #{from}, to = #{to}, host = #{host}, identity_file = #{identity_file}")
+    MyLogger.debug("remote backup: #{name}, from = #{from}, to = #{to}, identity_file = #{identity_file}")
   end
 
-  def show
+  def to_ss
     [
-      'RemoteBackup',
-      "  name = #{@name}",
-      "  from = #{@from}",
-      "  to = #{@to}",
-      "  identity_file = #{@identity_file}"
-    ].join("\n")
+      "RemoteBackup: #{@name}",
+      "     from = #{@from}",
+      "       to = #{@to}",
+      "  id_file = #{@identity_file}"
+    ]
   end
 
   def backup(config)
@@ -148,17 +147,12 @@ class RemoteBackup < Backup
       options: rsync_options(config.log_file, options),
       exclude_patterns: config.exclude_patterns
     )
-
-    MyLogger.info("remote backap '#{@name}'")
-    MyLogger.info("  from = #{@from}, to = #{@to}")
-    MyLogger.info("  host = #{@host}, identity_file = #{@dentity_file}")
-    MyLogger.info("  command = #{cmd}")
+    to_ss.each { |s| MyLogger.info s }
 
     ret = cmd.run
-    unless ret
-      MyLogger.info("backup failed; return code = #{ret}")
-      raise StandardError
-    end
-    MyLogger.info('backup finished')
+    return if ret
+
+    MyLogger.info("backup failed; return code = #{ret}")
+    raise StandardError
   end
 end

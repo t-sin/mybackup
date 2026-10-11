@@ -1,32 +1,50 @@
 # frozen_string_literal: true
 
+require 'English'
 require 'logger'
 
 class MyLogger
   def self.setup(level, file)
-    level = level.upcase.intern
+    level = level.intern
     @@logger = new level, file
   end
 
-  def self.pause
+  def self.pause_file
     @@logger.start_file_logger
   end
 
-  def self.resume
+  def self.restart_file
     @@logger.stop_file_logger
   end
 
-  def self.method_missing(name, msg, only_stdout: false, only_file: false)
-    @@logger.log name, msg, only_stdout:, only_file:
+  def self.method_missing(name, msg)
+    @@logger.log name, msg
   end
 
-  def self.log(method, msg, only_stdout: false, only_file: false)
-    @@logger.log method, msg, only_stdout:, only_file:
+  def self.log(method, msg)
+    @@logger.log method, msg
+  end
+
+  def self.format_file_log(severity, datetime, progname, msg)
+    datetime = datetime.iso8601
+    "[#{progname}][#{severity}][#{datetime} #{$PROCESS_ID}]: #{msg}\n"
+  end
+
+  def self.format_stdout_log(_severity, _datetime, _progname, msg)
+    "#{msg}\n"
   end
 
   def start_file_logger
     file = File.open @file, mode: 'a'
     @file_logger = Logger.new(file, level: @level)
+    @file_logger.progname = MyBackup::PROG_NAME
+    @file_logger.formatter = self.class.public_method(:format_file_log).to_proc
+  end
+
+  def start_stdout_logger
+    @stdout_logger = Logger.new($stdout, level: @level)
+    @stdout_logger.progname = MyBackup::PROG_NAME
+    @stdout_logger.formatter = self.class.public_method(:format_stdout_log).to_proc
   end
 
   def stop_file_logger
@@ -38,12 +56,12 @@ class MyLogger
     @level = level
     @file = file
 
-    @stdout_logger = Logger.new($stdout, level: @level, skip_header: true)
+    start_stdout_logger
     start_file_logger
   end
 
-  def log(method, msg, only_stdout:, only_file:)
-    @stdout_logger.public_method(method).call msg unless only_file
-    @file_logger.public_method(method).call msg unless only_stdout
+  def log(method, msg)
+    @stdout_logger.public_method(method).call msg
+    @file_logger&.public_method(method)&.call msg
   end
 end

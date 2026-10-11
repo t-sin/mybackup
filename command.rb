@@ -22,33 +22,34 @@ class RsyncCommand
   def build_command
     options = @options + exclude_options
     cmd = [COMMAND_NAME] + options + [@src, @dest]
-    cmd = ['echo'] + cmd if @dry_run
-    cmd
+    @cmd = cmd
   end
 
   def run_normally
-    MyLogger.pause
-    succeeded = system(*build_command)
+    MyLogger.pause_file
+    succeeded = system(*@cmd)
     exit_code = $CHILD_STATUS
-    MyLogger.resume
+    MyLogger.restart_file
 
     [succeeded, exit_code]
   end
 
   def run_dryry
-    MyLogger.info('********** dry run!!!!! **********')
-    system(*build_command)
+    MyLogger.info 'DRY RUN SO NOT RUN THAT COMMAND'
     [true, 0]
   end
 
   def run
-    puts
-    succeeded, exit_code = if @dry_run
-                             run_dryry
-                           else
-                             run_normally
-                           end
-    puts
-    [succeeded, exit_code]
+    build_command
+
+    cmd_pp = ''.dup
+    PP.pp @cmd, cmd_pp
+    MyLogger.info "command:\n#{cmd_pp}"
+
+    if @dry_run
+      run_dryry
+    else
+      run_normally
+    end
   end
 end
