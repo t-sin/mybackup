@@ -45,13 +45,13 @@ def main(config)
   case config.operation
   when MyBackup::OP_SHOW_CONFIG
     s = config
-    MyLogger.info s
+    MyLogger.info s, only_file: true
     puts s
     puts
   when MyBackup::OP_LIST_TARGETS
     backups.each do |b|
       s = b.show
-      MyLogger.info s
+      MyLogger.info s, only_file: true
       puts s
       puts
     end

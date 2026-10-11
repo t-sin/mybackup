@@ -16,12 +16,12 @@ class MyLogger
     @@logger.stop_file_logger
   end
 
-  def self.method_missing(name, msg)
-    @@logger.log name, msg
+  def self.method_missing(name, msg, only_stdout: false, only_file: false)
+    @@logger.log name, msg, only_stdout:, only_file:
   end
 
-  def self.log(method, msg)
-    @@logger.log method, msg
+  def self.log(method, msg, only_stdout: false, only_file: false)
+    @@logger.log method, msg, only_stdout:, only_file:
   end
 
   def start_file_logger
@@ -42,8 +42,8 @@ class MyLogger
     start_file_logger
   end
 
-  def log(method, msg)
-    @stdout_logger.public_method(method).call msg
-    @file_logger&.public_method(method)&.call msg
+  def log(method, msg, only_stdout:, only_file:)
+    @stdout_logger.public_method(method).call msg unless only_file
+    @file_logger.public_method(method).call msg unless only_stdout
   end
 end
