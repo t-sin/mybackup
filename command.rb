@@ -16,7 +16,7 @@ class RsyncCommand
   end
 
   def exclude_options
-    @exclude_patterns.map { |pat| "--exclude=\"#{pat}\"" }
+    @exclude_patterns.map { |pat| "--exclude=#{pat}" }
   end
 
   def build_command
