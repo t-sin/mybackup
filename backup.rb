@@ -64,7 +64,7 @@ class Backup
   end
 end
 
-class LocalBackup
+class LocalBackup < Backup
   def self.from_h(backup)
     new backup['name'], backup['from'], backup['to']
   end
@@ -110,11 +110,11 @@ class LocalBackup
   end
 end
 
-class RemoteBackup
+class RemoteBackup < Backup
   attr_reader :host, :identity_file
 
   def self.from_h(backup)
-    superclass.hash_has_key? backup, 'identity_file'
+    self.hash_has_key? backup, 'identity_file'
 
     new backup['name'], backup['from'], backup['to'], backup['host'], backup['identity_file']
   end
