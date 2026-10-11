@@ -66,7 +66,8 @@ class Backup
       #  出力オプション
       '--itemize-changes',                        # 同期された理由を表示
       '--human-readable',                         # ファイルザイズをK, M, Gとかにする
-      '--out-format="%t %i %o %n%L"',             # コンソール出力フォーマット:
+      # '--out-format="%t %i %o %n%L"',             # コンソール出力フォーマット:
+      '--quiet',                                  # stdoutのログはなし
       '--log-file-format="%t %i %o %n%L"',        # ログファイル出力フォーマット:
       "--log-file=#{log_file}" # ログファイル名
     ]

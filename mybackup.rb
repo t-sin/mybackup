@@ -40,6 +40,14 @@ MyLogger.setup(config.log_level, config.log_file)
 require_relative 'backup'
 require_relative 'command'
 
+def format_sec(sec)
+  sec = sec.truncate
+  min, sec = sec.divmod(60)
+  hour, min = min.divmod(60)
+
+  "#{hour}h #{min}m #{sec}s"
+end
+
 def main(config)
   MyLogger.info "operation = #{config.operation}"
   backups = config.backups.map { |b| Backup.from_h b }
@@ -52,13 +60,25 @@ def main(config)
       b.to_ss.each { |s| MyLogger.info s }
     end
   when MyBackup::OP_BACKUP
-    MyLogger.info "=== start backup operation at #{Time.now.iso8601}\n"
+    op_start_at = Time.now
+    MyLogger.info "=== start backup operation at #{op_start_at.iso8601}"
+
     backups.each do |b|
-      MyLogger.info "-- start backup #{b.name} at #{Time.now.iso8601}"
+      start_at = Time.now
+      MyLogger.info "start backup #{b.name} at #{start_at.iso8601}"
+
       b.backup config
-      MyLogger.info "-- finished backup #{b.name} at #{Time.now.iso8601}\n"
+
+      end_at = Time.now
+      MyLogger.info "finished backup #{b.name} at #{end_at.iso8601}"
+      MyLogger.info "it took #{format_sec(end_at - start_at)}"
+      MyLogger.info ''
     end
-    MyLogger.info "finished backup operation at #{Time.now.iso8601}"
+
+    op_end_at = Time.now
+    MyLogger.info "finished backup operation at #{op_end_at.iso8601}"
+    MyLogger.info "it took #{format_sec(op_end_at - op_start_at)}"
+
   else
     msg = "unknown operation: #{op}"
     MyLogger.fatal msg
