@@ -1,5 +1,34 @@
 #!/bin/sh
-here=$(dirname "$(realpath ""${0:-}"")")
-/usr/bin/env bundle exec \
-  --gemfile "${here}/Gemfile" \
-  ruby "${here}/mybackup.rb" "$@"
+here=$(dirname "$(realpath "$0")")
+
+has_asdf_installed_bundler() {
+  if ! command -v asdf >/dev/null 2>&1; then
+    return 1
+  fi
+  if ! (cd "$here" && asdf which ruby >/dev/null 2>&1); then
+    return 1
+  fi
+
+  return 0
+}
+
+run_via_bundler() {
+  bundle="$1"
+  shift
+
+  if ! "$bundle" check --gemfile "${here}/Gemfile" >/dev/null 2>&1; then
+    echo 'doing `bundle install`...'
+    "$bundle" install --gemfile "${here}/Gemfile" >/dev/null 2>&1
+    echo '`bundle install` has done!'
+  fi
+
+  "$bundle" exec --gemfile "${here}/Gemfile" ruby "${here}/mybackup.rb" "$@"
+}
+
+if has_asdf_installed_bundler; then
+  bundle_path=$(cd "$here" && asdf which bundle)
+  run_via_bundler "$bundle_path" "$@"
+else
+  bundle_path=$(command -v bundle)
+  run_via_bundler "$bundle_path" "$@"
+fi
