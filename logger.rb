@@ -10,11 +10,11 @@ class MyLogger
   end
 
   def self.pause_file
-    @@logger.start_file_logger
+    @@logger.stop_file_logger
   end
 
   def self.restart_file
-    @@logger.stop_file_logger
+    @@logger.start_file_logger
   end
 
   def self.method_missing(name, msg)
