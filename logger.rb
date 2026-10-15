@@ -25,9 +25,9 @@ class MyLogger
     @@logger.log method, msg
   end
 
-  def self.format_file_log(severity, datetime, progname, msg)
+  def self.format_file_log(severity, datetime, _progname, msg)
     datetime = datetime.iso8601
-    "[#{progname}][#{severity}][#{datetime} #{$PROCESS_ID}]: #{msg}\n"
+    "[#{severity}][#{datetime}][#{$PROCESS_ID}]: #{msg}\n"
   end
 
   def self.format_stdout_log(_severity, _datetime, _progname, msg)
