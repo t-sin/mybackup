@@ -1,22 +1,25 @@
 log:
-  # Log level defined in Logger::Severity
+  # ログレベル。`Logger::Severity`の文字列を使う。
   level: info
-  # A directory to be placed logs like YYYY-MM-DD_mybakcup.log
+  # ログが出力されるディレクトリ。
   directory: ~/tmp/mybackup_logs
-# Patterns for paths to be excluded
-# For more detail, see FILTER RULES section in `man rsync`
+# 除外するパスのパターン
+# 詳細はrsyncのmanのFILTER RULESを参照。
 exclude_patterns:
   - Application Data/Hoge
-# If you write a directory as source path, take care a slash at end of path.
-# rsync treats paths different way by a slash at end of path.
-# - A source path ends with a slash: "transfer all files in a source path into root of a dest directory."
-# - A source path not ends with a slash "transfer a source directory as a dest directory" (but not such behavior with remote paths)
+# fromがディレクトリのとき、末尾のスラッシュによって動作が変わる。
+# もし末尾スラッシュのfromなら、fromのディレクトリ内の全てがto内にコピーされる。
+# もし末尾スラッシュなしのfromなら、fromのディレクトリそのものがto内につくられる。
+#
+# このへんはrsyncの挙動。
+# リモートがfromやtoのときはリモート側でシェル展開など発生する。
+# 吸収するにはさまざまなケースがありそうだったので、このへんの差異をこのツールでは吸収しないことにした。
 backups:
   - name: my home directory
     type: local
     from: /home/username/
     to: /path/to/backup_data/username_home/
-  # backup between remote and local directories via ssh
+  # リモートサーバのときはsshをつかって同期を行う。いちおう鍵ファイルを指定できるようにしておいた。
   - name: minecraft data on my server
     type: remote
     identity_file: ~/.ssh/my-server.id
