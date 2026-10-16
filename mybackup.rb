@@ -48,6 +48,48 @@ def format_sec(sec)
   "#{hour}h #{min}m #{sec}s"
 end
 
+def ask_id_files(backups)
+  remotes = backups.select { |b| b.instance_of? RemoteBackup }
+  MyLogger.info "there are #{remotes.count} RemoteBackups."
+  MyLogger.info 'used keys are:'
+  remotes.each do |r|
+    MyLogger.info "- #{r.identity_file} (in backup '#{r.name}')"
+  end
+  MyLogger.info 'did you add these keys to ssh agent?'
+  MyLogger.info 'asking passphrase stops this backup if you did not that.'
+
+  is_ok = false
+  until is_ok
+    MyLogger.info 'ok? (yes/no)'
+    input = $stdin.readline.chop
+    exit 1 if input == 'no'
+    is_ok = input.chop == 'yes'
+  end
+end
+
+def op_backup(backups, config)
+  ask_id_files backups
+
+  op_start_at = Time.now
+  MyLogger.info "=== start backup operation at #{op_start_at.iso8601}"
+
+  backups.each do |b|
+    start_at = Time.now
+    MyLogger.info "start backup #{b.name} at #{start_at.iso8601}"
+
+    b.backup config
+
+    end_at = Time.now
+    MyLogger.info "finished backup #{b.name} at #{end_at.iso8601}"
+    MyLogger.info "it took #{format_sec(end_at - start_at)}"
+    MyLogger.info ''
+  end
+
+  op_end_at = Time.now
+  MyLogger.info "finished backup operation at #{op_end_at.iso8601}"
+  MyLogger.info "it took #{format_sec(op_end_at - op_start_at)}"
+end
+
 def main(config)
   MyLogger.info "operation = #{config.operation}"
   backups = config.backups.map { |b| Backup.from_h b }
@@ -60,25 +102,7 @@ def main(config)
       b.to_ss.each { |s| MyLogger.info s }
     end
   when MyBackup::OP_BACKUP
-    op_start_at = Time.now
-    MyLogger.info "=== start backup operation at #{op_start_at.iso8601}"
-
-    backups.each do |b|
-      start_at = Time.now
-      MyLogger.info "start backup #{b.name} at #{start_at.iso8601}"
-
-      b.backup config
-
-      end_at = Time.now
-      MyLogger.info "finished backup #{b.name} at #{end_at.iso8601}"
-      MyLogger.info "it took #{format_sec(end_at - start_at)}"
-      MyLogger.info ''
-    end
-
-    op_end_at = Time.now
-    MyLogger.info "finished backup operation at #{op_end_at.iso8601}"
-    MyLogger.info "it took #{format_sec(op_end_at - op_start_at)}"
-
+    op_backup backups, config
   else
     msg = "unknown operation: #{op}"
     MyLogger.fatal msg
