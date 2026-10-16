@@ -1,0 +1,56 @@
+# 動作テストにつかった設定ファイル
+log:
+  level: info
+  directory: ~/log
+# 除外するパスのパターン
+# 詳細はrsyncのmanのFILTER RULESを参照。
+exclude_patterns:
+  # テスト結果: OK (これらのディレクトリがコピーされてなかったため)
+  - "wine/"
+  - "*.asd"
+  - "builder/Dock*"
+  - "*-keymap-*"
+  - "src/*-run-*"
+# fromがディレクトリのとき、末尾のスラッシュによって動作が変わる。
+# もし末尾スラッシュのfromなら、fromのディレクトリ内の全てがto内にコピーされる。
+# もし末尾スラッシュなしのfromなら、fromのディレクトリそのものがto内につくられる。
+#
+# このへんはrsyncの挙動。
+# リモートがfromやtoのときはリモート側でシェル展開など発生する。
+# 吸収するにはさまざまなケースがありそうだったので、このへんの差異をこのツールでは吸収しないことにした。
+backups:
+  # ディレクトリ内のものを全コピ
+  # テスト結果: OK
+  # (home_opt内にopt内のものが直接展開されていた)
+  - name: home/opt
+    type: local
+    from: /home/user/opt/
+    to: /media/user/data/__backuptest/home_opt
+
+  # ディレクトリを同名で同期
+  # テスト結果: OK
+  # `__backuptest/src/`内にsrcができてた
+  # fromの末尾にスラッシュつけるとsrc内直下にファイルがコピーされてた
+  - name: home/src ... copy src as src
+    type: local
+    from: /home/user/src
+    to: /media/user/data/__backuptest/src
+
+  # ディレクトリ内のものを全コピ (リモート)
+  # テスト結果: OK
+  # (server_home_lem内にlem内のものが直接展開されていた)
+  - name: test-server:~/lem
+    type: remote
+    identity_file: ~/.ssh/server_test-server.id
+    from: "test-server:~/lem/"
+    to: /media/user/data/__backuptest/test-server_home_lem
+
+  # ディレクトリを同名で同期 (リモート)
+  # テスト結果: OK
+  # `__backuptest/roswell/`内にroswellができてた
+  # fromの末尾にスラッシュつけるとroswell内直下にファイルがコピーされてた
+  - name: test-server:~/roswell
+    type: remote
+    identity_file: ~/.ssh/server_test-server.id
+    from: "test-server:~/roswell"
+    to: /media/user/data/__backuptest/roswell
