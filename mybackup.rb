@@ -61,8 +61,13 @@ def ask_id_files(backups)
   is_ok = false
   until is_ok
     MyLogger.info 'ok? (yes/no)'
-    input = $stdin.readline.chop
+    input = begin
+      $stdin.readline.chop
+    rescue Interrupt
+      exit 1
+    end
     exit 1 if input == 'no'
+
     is_ok = input.chop == 'yes'
   end
 end
