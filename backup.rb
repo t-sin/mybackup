@@ -2,11 +2,6 @@
 
 require 'pp'
 
-def remove_last_slash(s)
-  s.chop! if s.end_with? '/'
-  s
-end
-
 class Backup
   attr_reader :name, :from, :to
 
@@ -95,11 +90,9 @@ class LocalBackup < Backup
   end
 
   def backup(config)
-    from = remove_last_slash @from
-    to = remove_last_slash @to
     options = []
     cmd = RsyncCommand.new(
-      from, to,
+      @from, @to,
       dry_run: config.dry_run,
       options: rsync_options(config.log_file, options),
       exclude_patterns: config.exclude_patterns
@@ -139,11 +132,9 @@ class RemoteBackup < Backup
   end
 
   def backup(config)
-    from = remove_last_slash @from
-    to = remove_last_slash @to
     options = ["--rsh=ssh -i #{@identity_file}"]
     cmd = RsyncCommand.new(
-      from, to,
+      @from, @to,
       dry_run: config.dry_run,
       options: rsync_options(config.log_file, options),
       exclude_patterns: config.exclude_patterns
