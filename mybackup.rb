@@ -68,7 +68,7 @@ def ask_id_files(backups)
     end
     exit 1 if input == 'no'
 
-    is_ok = input.chop == 'yes'
+    is_ok = input.chomp == 'yes'
   end
 end
 
