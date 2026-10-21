@@ -46,7 +46,7 @@ def validate_yaml(yaml)
 end
 
 class MybackupConfig
-  attr_reader :operation, :dry_run, :log_file, :log_level, :backups, :exclude_patterns
+  attr_reader :operation, :dry_run, :log_file, :log_level, :backups, :exclude_patterns, :target_id
 
   DATE_FORMAT = '%Y-%m-%d'
 
@@ -55,8 +55,11 @@ class MybackupConfig
                    MyBackup::OP_LIST_TARGETS
                  elsif params[:config]
                    MyBackup::OP_SHOW_CONFIG
+                 elsif params[:id]
+                   @target_id = params[:id]
+                   MyBackup::OP_BACKUP_ONE
                  else
-                   MyBackup::OP_BACKUP
+                   MyBackup::OP_BACKUP_ALL
                  end
   end
 
@@ -95,6 +98,7 @@ class MybackupConfig
   def to_h
     {
       'operation' => @operation,
+      'target_id' => @target_id,
       'dry_run' => @dry_run,
       'log_level' => @log_level,
       'log_file' => @log_file,

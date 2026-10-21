@@ -9,7 +9,8 @@ class MyBackup
 
   OP_LIST_TARGETS = :'op::list_targets'
   OP_SHOW_CONFIG = :'op::show_config'
-  OP_BACKUP = :'op::backup'
+  OP_BACKUP_ALL = :'op::backup_all'
+  OP_BACKUP_ONE = :'op::backup_one'
 end
 
 def parse_opt(argv)
@@ -18,7 +19,8 @@ def parse_opt(argv)
   opt.version = MyBackup::PORG_VERSION
   opt.on('-l', '--list', 'List all backup targets.') { |v| v }
   opt.on('-c', '--config', 'Show configuration.') { |v| v }
-  opt.on('-n', '--dry-run', 'Run backup process without actual rsync command.') { |v| v }
+  opt.on('-n', '--dry-run', 'Run backup without actual rsync command.') { |v| v }
+  opt.on('-i ID', '--id', 'Run a backup specified with ID.') { |v| v }
 
   params = {}
 
@@ -72,27 +74,30 @@ def ask_id_files(backups)
   end
 end
 
-def op_backup(backups, config)
+def op_backup_one(backup, config)
+  b = backup
+  start_at = Time.now
+  MyLogger.info "start backup #{b.name} at #{start_at.iso8601}"
+
+  b.backup config
+
+  end_at = Time.now
+  MyLogger.info "finished backup #{b.name} at #{end_at.iso8601}"
+  MyLogger.info "it took #{format_sec(end_at - start_at)}"
+  MyLogger.info ''
+end
+
+def op_backup_all(backups, config)
   ask_id_files backups
 
-  op_start_at = Time.now
-  MyLogger.info "=== start backup operation at #{op_start_at.iso8601}"
+  start_at = Time.now
+  MyLogger.info "=== start backup operation at #{start_at.iso8601}"
 
-  backups.each do |b|
-    start_at = Time.now
-    MyLogger.info "start backup #{b.name} at #{start_at.iso8601}"
+  backups.each { |b| op_backup_one b, config }
 
-    b.backup config
-
-    end_at = Time.now
-    MyLogger.info "finished backup #{b.name} at #{end_at.iso8601}"
-    MyLogger.info "it took #{format_sec(end_at - start_at)}"
-    MyLogger.info ''
-  end
-
-  op_end_at = Time.now
-  MyLogger.info "finished backup operation at #{op_end_at.iso8601}"
-  MyLogger.info "it took #{format_sec(op_end_at - op_start_at)}"
+  end_at = Time.now
+  MyLogger.info "finished backup operation at #{end_at.iso8601}"
+  MyLogger.info "it took #{format_sec(end_at - start_at)}"
 end
 
 def main(config)
@@ -106,8 +111,16 @@ def main(config)
     backups.each do |b|
       b.to_ss.each { |s| MyLogger.info s }
     end
-  when MyBackup::OP_BACKUP
-    op_backup backups, config
+  when MyBackup::OP_BACKUP_ONE
+    backup = backups.select { |b| b.id == config.target_id }.first
+    if backup.nil?
+      MyLogger.fatal "no such backup: id = #{config.target_id}"
+      exit 1
+    end
+
+    op_backup_one backup, config
+  when MyBackup::OP_BACKUP_ALL
+    op_backup_all backups, config
   else
     msg = "unknown operation: #{op}"
     MyLogger.fatal msg
