@@ -22,7 +22,8 @@ backups:
   # ディレクトリ内のものを全コピ
   # テスト結果: OK
   # (home_opt内にopt内のものが直接展開されていた)
-  - name: home/opt
+  - id: test_local1
+    name: home/opt
     type: local
     from: /home/user/opt/
     to: /media/user/data/__backuptest/home_opt
@@ -31,7 +32,8 @@ backups:
   # テスト結果: OK
   # `__backuptest/src/`内にsrcができてた
   # fromの末尾にスラッシュつけるとsrc内直下にファイルがコピーされてた
-  - name: home/src ... copy src as src
+  - id: test_local2
+    name: home/src ... copy src as src
     type: local
     from: /home/user/src
     to: /media/user/data/__backuptest/src
@@ -39,7 +41,8 @@ backups:
   # ディレクトリ内のものを全コピ (リモート)
   # テスト結果: OK
   # (server_home_lem内にlem内のものが直接展開されていた)
-  - name: test-server:~/lem
+  - id: test_remote1
+    name: test-server:~/lem
     type: remote
     identity_file: ~/.ssh/server_test-server.id
     from: "test-server:~/lem/"
@@ -49,7 +52,8 @@ backups:
   # テスト結果: OK
   # `__backuptest/roswell/`内にroswellができてた
   # fromの末尾にスラッシュつけるとroswell内直下にファイルがコピーされてた
-  - name: test-server:~/roswell
+  - id: test_remote2
+    name: test-server:~/roswell
     type: remote
     identity_file: ~/.ssh/server_test-server.id
     from: "test-server:~/roswell"

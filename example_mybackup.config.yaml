@@ -15,12 +15,14 @@ exclude_patterns:
 # リモートがfromやtoのときはリモート側でシェル展開など発生する。
 # 吸収するにはさまざまなケースがありそうだったので、このへんの差異をこのツールでは吸収しないことにした。
 backups:
-  - name: my home directory
+  - id: home-dir
+    name: my home directory
     type: local
     from: /home/username/
     to: /path/to/backup_data/username_home/
   # リモートサーバのときはsshをつかって同期を行う。いちおう鍵ファイルを指定できるようにしておいた。
-  - name: minecraft data on my server
+  - id: minecraft-data
+    name: minecraft data on my server
     type: remote
     identity_file: ~/.ssh/my-server.id
     from: "my-mc-server:~/mincraft_data/"

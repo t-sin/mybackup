@@ -3,7 +3,7 @@
 require 'pp'
 
 class Backup
-  attr_reader :name, :from, :to
+  attr_reader :id, :name, :from, :to
 
   def self.hash_has_key?(backup, key)
     return false if backup.key? key
@@ -14,6 +14,7 @@ class Backup
   end
 
   def self.from_h(backup)
+    hash_has_key? backup, 'id'
     hash_has_key? backup, 'name'
     hash_has_key? backup, 'type'
     hash_has_key? backup, 'from'
@@ -42,7 +43,8 @@ class Backup
     raise NotImplementedError, msg
   end
 
-  def initialize(name, from, to)
+  def initialize(id, name, from, to)
+    @id = id
     @name = name
     @from = from
     @to = to
@@ -72,17 +74,17 @@ end
 
 class LocalBackup < Backup
   def self.from_h(backup)
-    new backup['name'], backup['from'], backup['to']
+    new backup['id'], backup['name'], backup['from'], backup['to']
   end
 
-  def initialize(name, from, to)
+  def initialize(id, name, from, to)
     super
-    MyLogger.debug("local backup: #{name}, from = #{from}, to = #{to}")
+    MyLogger.debug("local backup: #{id}, name = #{name}, from = #{from}, to = #{to}")
   end
 
   def to_ss
     [
-      "LocalBackup: #{@name}",
+      "LocalBackup: #{@id}",
       "  name = #{@name}",
       "  from = #{@from}",
       "    to = #{@to}"
@@ -113,18 +115,18 @@ class RemoteBackup < Backup
   def self.from_h(backup)
     hash_has_key? backup, 'identity_file'
 
-    new backup['name'], backup['from'], backup['to'], backup['identity_file']
+    new backup['id'], backup['name'], backup['from'], backup['to'], backup['identity_file']
   end
 
-  def initialize(name, from, to, identity_file)
-    super(name, from, to)
+  def initialize(id, name, from, to, identity_file)
+    super(id, name, from, to)
     @identity_file = identity_file
-    MyLogger.debug("remote backup: #{name}, from = #{from}, to = #{to}, identity_file = #{identity_file}")
+    MyLogger.debug("remote backup: #{id}, name = #{name}, from = #{from}, to = #{to}, identity_file = #{identity_file}")
   end
 
   def to_ss
     [
-      "RemoteBackup: #{@name}",
+      "RemoteBackup: #{@id}",
       "     from = #{@from}",
       "       to = #{@to}",
       "  id_file = #{@identity_file}"
