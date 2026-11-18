@@ -58,3 +58,13 @@ backups:
     identity_file: ~/.ssh/server_test-server.id
     from: "test-server:~/roswell"
     to: /media/user/data/__backuptest/roswell
+
+  # 異なるリモートディレクトリ (リモート2)
+  # テスト結果: OK
+  # ssh鍵が2つともssh-addされた
+  - id: test_remote_id
+    name: test-server2:~/testdir
+    type: remote
+    identity_file: ~/.ssh/server_test-server2.id
+    from: "test-server2:~/testdir/"
+    to: /media/user/data/__backuptest/testdir
