@@ -10,17 +10,17 @@ class MyBackup
   OP_LIST_TARGETS = :'op::list_targets'
   OP_SHOW_CONFIG = :'op::show_config'
   OP_BACKUP_ALL = :'op::backup_all'
-  OP_BACKUP_ONE = :'op::backup_one'
+  OP_BACKUP_IDS = :'op::backup_ids'
 end
 
 def parse_opt(argv)
   opt = OptionParser.new
   opt.banner = "Usage: #{MyBackup::PROG_NAME} [CONFIG_PATH]"
   opt.version = MyBackup::PORG_VERSION
+  opt.on('-i IDS', '--ids', 'Run backups specified with comma-separated IDS.') { |v| v }
   opt.on('-l', '--list', 'List all backup targets.') { |v| v }
   opt.on('-c', '--config', 'Show configuration.') { |v| v }
   opt.on('-n', '--dry-run', 'Run backup without actual rsync command.') { |v| v }
-  opt.on('-i ID', '--id', 'Run a backup specified with ID.') { |v| v }
 
   params = {}
 
@@ -105,16 +105,11 @@ def main(config)
     backups.each do |b|
       b.to_ss.each { |s| MyLogger.info s }
     end
-  when MyBackup::OP_BACKUP_ONE
-    backup = backups.select { |b| b.id == config.target_id }.first
-    if backup.nil?
-      MyLogger.fatal "no such backup: id = #{config.target_id}"
-      exit 1
-    end
-
-    op_backup_one backup, config
   when MyBackup::OP_BACKUP_ALL
     op_backup_all backups, config
+  when MyBackup::OP_BACKUP_IDS
+    targets = backups.select { |b| config.target_ids.include? b.id }
+    op_backup_all targets, config
   else
     msg = "unknown operation: #{op}"
     MyLogger.fatal msg
