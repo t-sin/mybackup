@@ -84,7 +84,8 @@ class LocalBackup < Backup
 
   def to_ss
     [
-      "LocalBackup: #{@id}",
+      'LocalBackup',
+      "    id = #{@id}",
       "  name = #{@name}",
       "  from = #{@from}",
       "    to = #{@to}"
@@ -126,7 +127,8 @@ class RemoteBackup < Backup
 
   def to_ss
     [
-      "RemoteBackup: #{@id}",
+      'RemoteBackup',
+      "       id = #{@id}",
       "     from = #{@from}",
       "       to = #{@to}",
       "  id_file = #{@identity_file}"
