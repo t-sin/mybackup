@@ -36,6 +36,8 @@ class Backup
     raise NotImplementedError, msg
   end
 
+  def setup(_config); end
+
   def backup(_config)
     msg = 'there is no info to run backup'
     MyLogger.fatal msg
@@ -135,8 +137,13 @@ class RemoteBackup < Backup
     ]
   end
 
+  def setup(config)
+    idfile = File.expand_path @identity_file
+    SshAddCommand.new(idfile, dry_run: config.dry_run).run
+  end
+
   def backup(config)
-    options = ["--rsh=ssh -i #{@identity_file}"]
+    options = ['--rsh=ssh -T']
     cmd = RsyncCommand.new(
       @from, @to,
       dry_run: config.dry_run,

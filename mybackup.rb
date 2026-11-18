@@ -50,30 +50,6 @@ def format_sec(sec)
   "#{hour}h #{min}m #{sec}s"
 end
 
-def ask_id_files(backups)
-  remotes = backups.select { |b| b.instance_of? RemoteBackup }
-  MyLogger.info "there are #{remotes.count} RemoteBackups."
-  MyLogger.info 'used keys are:'
-  remotes.each do |r|
-    MyLogger.info "- #{r.identity_file} (in backup '#{r.name}')"
-  end
-  MyLogger.info 'did you add these keys to ssh agent?'
-  MyLogger.info 'asking passphrase stops this backup if you did not that.'
-
-  is_ok = false
-  until is_ok
-    MyLogger.info 'ok? (yes/no)'
-    input = begin
-      $stdin.readline.chop
-    rescue Interrupt
-      exit 1
-    end
-    exit 1 if input == 'no'
-
-    is_ok = input.chomp == 'yes'
-  end
-end
-
 def op_backup_one(backup, config)
   b = backup
   start_at = Time.now
@@ -88,16 +64,34 @@ def op_backup_one(backup, config)
 end
 
 def op_backup_all(backups, config)
-  ask_id_files backups
+  MyLogger.info "=== preparing for #{config.operation}..."
+
+  ssh_agent = SshAgentCommand.new(dry_run: config.dry_run)
+  ssh_agent.start
+
+  added_keys = []
+  backups.each do |b|
+    MyLogger.debug "added_keys = #{added_keys}"
+    next unless b.instance_of?(RemoteBackup) && !added_keys.include?(b.identity_file)
+
+    b.setup config
+    MyLogger.info "ssh key added: #{b.identity_file}"
+    added_keys.push b.identity_file
+  end
+  MyLogger.info '=== preparation finished.'
 
   start_at = Time.now
   MyLogger.info "=== start backup operation at #{start_at.iso8601}"
 
-  backups.each { |b| op_backup_one b, config }
+  begin
+    backups.each { |b| op_backup_one b, config }
+  ensure
+    ssh_agent.stop
 
-  end_at = Time.now
-  MyLogger.info "finished backup operation at #{end_at.iso8601}"
-  MyLogger.info "it took #{format_sec(end_at - start_at)}"
+    end_at = Time.now
+    MyLogger.info "finished backup operation at #{end_at.iso8601}"
+    MyLogger.info "it took #{format_sec(end_at - start_at)}"
+  end
 end
 
 def main(config)
